@@ -1,0 +1,310 @@
+// ============================================================
+// PRISMA SCHEMA — Portfolio CMS
+// Alexander Bueno Santiago
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ============================================================
+// ADMIN
+// ============================================================
+model Admin {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String   @default("Alexander")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("admins")
+}
+
+// ============================================================
+// MEDIA LIBRARY — Biblioteca centralizada de arquivos
+// ============================================================
+model Media {
+  id           String   @id @default(cuid())
+  fileName     String
+  originalName String
+  url          String
+  mimeType     String
+  size         Int
+  bucket       String   @default("portfolio-cms")
+  path         String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("media")
+}
+
+// ============================================================
+// HERO SECTION
+// ============================================================
+model Hero {
+  id           String  @id @default(cuid())
+  name         String  @default("Alexander Bueno Santiago")
+  role         String  @default("Desenvolvedor Full Stack")
+  description  String  @default("")
+  photoUrl     String?
+  cvUrl        String?
+  githubUrl    String?
+  linkedinUrl  String?
+  emailAddress String?
+  whatsapp     String  @default("5511983943905")
+  typingSvgUrl String?
+  available    Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("hero")
+}
+
+// ============================================================
+// ABOUT SECTION
+// ============================================================
+model About {
+  id         String @id @default(cuid())
+  paragraph1 String @default("")
+  paragraph2 String @default("")
+  paragraph3 String @default("")
+  // JSON: [{icon: string, title: string, description: string}]
+  highlights Json   @default("[]")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("about")
+}
+
+// ============================================================
+// PROJECTS
+// ============================================================
+model Project {
+  id               String   @id @default(cuid())
+  title            String
+  slug             String   @unique
+  shortDescription String
+  fullDescription  String   @default("")
+  image            String?
+  // JSON: [{src: string, alt: string}]
+  images           Json     @default("[]")
+  tags             String[]
+  categories       String[]
+  featured         Boolean  @default(false)
+  highlight        String?
+  linkDemo         String?
+  linkGithub       String?
+  linkGithubFront  String?
+  linkGithubBack   String?
+  status           String   @default("active")
+  order            Int      @default(0)
+  active           Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("projects")
+}
+
+// ============================================================
+// CERTIFICATIONS
+// ============================================================
+model Certification {
+  id          String   @id @default(cuid())
+  title       String
+  institution String
+  year        Int
+  hours       Int      @default(0)
+  tags        String[]
+  stars       Int      @default(5)
+  link        String?
+  imageUrl    String?
+  pdfUrl      String?
+  inProgress  Boolean  @default(false)
+  order       Int      @default(0)
+  active      Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("certifications")
+}
+
+// ============================================================
+// SKILLS
+// ============================================================
+model Skill {
+  id       String  @id @default(cuid())
+  name     String
+  category String
+  icon     String
+  level    String  @default("intermediate")
+  order    Int     @default(0)
+  active   Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("skills")
+}
+
+// ============================================================
+// SERVICE PLANS
+// ============================================================
+model ServicePlan {
+  id          String   @id @default(cuid())
+  name        String
+  price       String
+  period      String   @default("entrega única")
+  description String
+  features    String[]
+  highlighted Boolean  @default(false)
+  badge       String?
+  ctaText     String   @default("Solicitar Orçamento")
+  ctaMessage  String
+  order       Int      @default(0)
+  active      Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("service_plans")
+}
+
+// ============================================================
+// SERVICE EXTRAS
+// ============================================================
+model ServiceExtra {
+  id          String  @id @default(cuid())
+  label       String
+  description String
+  icon        String
+  order       Int     @default(0)
+  active      Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("service_extras")
+}
+
+// ============================================================
+// CONTACT
+// ============================================================
+model Contact {
+  id             String  @id @default(cuid())
+  whatsapp       String  @default("5511983943905")
+  email          String  @default("")
+  location       String  @default("São Paulo, SP")
+  github         String?
+  githubUrl      String?
+  linkedin       String?
+  linkedinUrl    String?
+  instagram      String?
+  instagramUrl   String?
+  defaultMessage String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("contact")
+}
+
+// ============================================================
+// SITE SETTINGS — SEO + Configurações globais
+// ============================================================
+model SiteSettings {
+  id            String   @id @default(cuid())
+  siteTitle     String   @default("Alexander Bueno Santiago — Desenvolvedor Full Stack")
+  description   String   @default("")
+  keywords      String[]
+  ogTitle       String?
+  ogDescription String?
+  faviconUrl    String?
+  logoUrl       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("site_settings")
+}
+
+// ============================================================
+// LEADS — Módulo comercial
+// ============================================================
+model Lead {
+  id       String  @id @default(cuid())
+  name     String
+  email    String
+  phone    String?
+  company  String?
+  message  String?
+  // novo | em_contato | proposta | convertido | perdido
+  status   String  @default("novo")
+  archived Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("leads")
+}
+
+// ============================================================
+// BLOG — Preparação futura
+// ============================================================
+model BlogPost {
+  id         String   @id @default(cuid())
+  title      String
+  slug       String   @unique
+  excerpt    String?
+  content    String?
+  coverUrl   String?
+  author     String   @default("Alexander")
+  published  Boolean  @default(false)
+  featured   Boolean  @default(false)
+  tags       String[]
+  categories String[]
+  readTime   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("blog_posts")
+}
+
+model BlogCategory {
+  id   String @id @default(cuid())
+  name String
+  slug String @unique
+
+  createdAt DateTime @default(now())
+
+  @@map("blog_categories")
+}
+
+// ============================================================
+// ANALYTICS — Preparação futura
+// ============================================================
+model SiteVisit {
+  id        String  @id @default(cuid())
+  page      String
+  referrer  String?
+  userAgent String?
+  ip        String?
+  // mobile | desktop | tablet
+  device    String?
+  country   String?
+
+  createdAt DateTime @default(now())
+
+  @@map("site_visits")
+}
