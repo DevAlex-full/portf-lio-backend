@@ -247,6 +247,7 @@ model Lead {
   email    String
   phone    String?
   company  String?
+  source   String?
   message  String?
   // novo | em_contato | proposta | convertido | perdido
   status   String  @default("novo")

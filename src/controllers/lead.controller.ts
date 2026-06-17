@@ -13,7 +13,9 @@ export async function createLead(req: FastifyRequest, reply: FastifyReply): Prom
     email:    string
     phone?:   string
     company?: string
+    source?:  string
     message?: string
+    status?:  string
   }
 
   if (!body.name || !body.email) {
@@ -26,7 +28,9 @@ export async function createLead(req: FastifyRequest, reply: FastifyReply): Prom
       email:   body.email,
       phone:   body.phone,
       company: body.company,
+      source:  body.source,
       message: body.message,
+      status:  body.status ?? 'novo',
     },
   })
 
@@ -99,6 +103,29 @@ export async function getLead(req: FastifyRequest, reply: FastifyReply): Promise
   const { id } = req.params as { id: string }
   const lead   = await prisma.lead.findUnique({ where: { id } })
   if (!lead) return reply.status(404).send({ error: 'Lead não encontrado.' })
+  return reply.send(lead)
+}
+
+// ============================================================
+// PUT /api/leads/:id — Admin: edição completa
+// ============================================================
+export async function updateLead(req: FastifyRequest, reply: FastifyReply): Promise<void> {
+  const { id } = req.params as { id: string }
+  const body   = req.body as Partial<{
+    name: string; email: string; phone: string
+    company: string; source: string; message: string; status: string
+  }>
+
+  const existing = await prisma.lead.findUnique({ where: { id } })
+  if (!existing) return reply.status(404).send({ error: 'Lead não encontrado.' })
+
+  if (body.status && !VALID_STATUSES.includes(body.status as LeadStatus)) {
+    return reply.status(400).send({
+      error: `Status inválido. Opções: ${VALID_STATUSES.join(', ')}`,
+    })
+  }
+
+  const lead = await prisma.lead.update({ where: { id }, data: body })
   return reply.send(lead)
 }
 

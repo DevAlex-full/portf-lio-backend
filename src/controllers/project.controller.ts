@@ -1,5 +1,6 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import slugify from 'slugify'
+import { Prisma } from '@prisma/client'
 import { prisma } from '../lib/prisma'
 
 // ============================================================
@@ -43,7 +44,10 @@ export async function createProject(req: FastifyRequest, reply: FastifyReply): P
     shortDescription: string
     fullDescription?: string
     image?:           string
-    images?:          unknown[]
+    // CORREÇÃO: era "unknown[]" — não é atribuível a Prisma.InputJsonValue.
+    // O campo "images" no schema é Json (@default("[]")), então o tipo
+    // correto para o corpo da requisição é Prisma.InputJsonValue.
+    images?:          Prisma.InputJsonValue
     tags?:            string[]
     categories?:      string[]
     featured?:        boolean
@@ -78,7 +82,10 @@ export async function createProject(req: FastifyRequest, reply: FastifyReply): P
       shortDescription: body.shortDescription,
       fullDescription:  body.fullDescription  ?? '',
       image:            body.image,
-      images:           body.images           ?? [],
+      // Cast explícito de segurança — garante compatibilidade com
+      // Prisma.ProjectCreateInput independentemente da forma exata do
+      // valor recebido em runtime (array de objetos JSON-serializáveis).
+      images:           (body.images ?? []) as Prisma.InputJsonValue,
       tags:             body.tags             ?? [],
       categories:       body.categories       ?? [],
       featured:         body.featured         ?? false,
@@ -107,7 +114,8 @@ export async function updateProject(req: FastifyRequest, reply: FastifyReply): P
     shortDescription: string
     fullDescription:  string
     image:            string
-    images:           unknown[]
+    // CORREÇÃO: era "unknown[]" — mesma causa do erro em createProject.
+    images:           Prisma.InputJsonValue
     tags:             string[]
     categories:       string[]
     featured:         boolean
@@ -134,7 +142,16 @@ export async function updateProject(req: FastifyRequest, reply: FastifyReply): P
 
   const project = await prisma.project.update({
     where: { id },
-    data:  body,
+    data: {
+      ...body,
+      // Cast explícito de segurança para o campo Json. Quando "images"
+      // não vier no corpo da requisição, permanece "undefined" — o que
+      // o Prisma interpreta corretamente como "não alterar este campo"
+      // em uma atualização parcial.
+      images: body.images !== undefined
+        ? (body.images as Prisma.InputJsonValue)
+        : undefined,
+    },
   })
 
   return reply.send(project)

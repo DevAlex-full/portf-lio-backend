@@ -1,4 +1,5 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
+import { Prisma } from '@prisma/client'
 import { prisma } from '../lib/prisma'
 
 // ============================================================
@@ -43,15 +44,29 @@ export async function getAbout(_req: FastifyRequest, reply: FastifyReply): Promi
 
 export async function updateAbout(req: FastifyRequest, reply: FastifyReply): Promise<void> {
   const body = req.body as Partial<{
-    paragraph1: string; paragraph2: string; paragraph3: string; highlights: unknown
+    paragraph1: string; paragraph2: string; paragraph3: string
+    // CORREÇÃO: era "highlights: unknown" — não é atribuível a
+    // Prisma.InputJsonValue. O campo "highlights" no schema é Json
+    // (@default("[]")), então o tipo correto é Prisma.InputJsonValue.
+    highlights: Prisma.InputJsonValue
   }>
+
+  // Cast explícito de segurança — usado nos dois branches (create/update)
+  // para garantir compatibilidade com Prisma.AboutCreateInput e
+  // Prisma.AboutUpdateInput independentemente da forma exata do valor.
+  const data = {
+    ...body,
+    highlights: body.highlights !== undefined
+      ? (body.highlights as Prisma.InputJsonValue)
+      : undefined,
+  }
 
   let about = await prisma.about.findFirst()
 
   if (about) {
-    about = await prisma.about.update({ where: { id: about.id }, data: body })
+    about = await prisma.about.update({ where: { id: about.id }, data })
   } else {
-    about = await prisma.about.create({ data: body })
+    about = await prisma.about.create({ data })
   }
 
   return reply.send(about)

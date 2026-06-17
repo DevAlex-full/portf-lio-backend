@@ -13,7 +13,7 @@ import {
   getAllExtras, createExtra, updateExtra, deleteExtra,
 } from '../controllers/service.controller'
 import {
-  createLead, getLeads, getLead,
+  createLead, getLeads, getLead, updateLead,
   updateLeadStatus, archiveLead, deleteLead,
 } from '../controllers/lead.controller'
 import { getDashboardStats } from '../controllers/dashboard.controller'
@@ -74,6 +74,7 @@ export const leadRoutes: FastifyPluginCallback = (fastify, _opts, done) => {
   // Admin
   fastify.get('/', { preHandler: [fastify.authenticate] }, getLeads)
   fastify.get('/:id', { preHandler: [fastify.authenticate] }, getLead)
+  fastify.put('/:id', { preHandler: [fastify.authenticate] }, updateLead)
   fastify.patch('/:id/status', { preHandler: [fastify.authenticate] }, updateLeadStatus)
   fastify.patch('/:id/archive', { preHandler: [fastify.authenticate] }, archiveLead)
   fastify.delete('/:id', { preHandler: [fastify.authenticate] }, deleteLead)
