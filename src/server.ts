@@ -9,6 +9,7 @@ import authPlugin from './plugins/auth.plugin'
 import { authRoutes }    from './routes/auth.routes'
 import { mediaRoutes }   from './routes/media.routes'
 import { projectRoutes } from './routes/project.routes'
+import { clientRoutes }  from './routes/client.routes'
 import {
   certificationRoutes,
   skillRoutes,
@@ -96,6 +97,7 @@ async function bootstrap(): Promise<void> {
   await app.register(authRoutes,          { prefix: '/api/auth' })
   await app.register(mediaRoutes,         { prefix: '/api/media' })
   await app.register(projectRoutes,       { prefix: '/api/projects' })
+  await app.register(clientRoutes,        { prefix: '/api/clients' })
   await app.register(certificationRoutes, { prefix: '/api/certifications' })
   await app.register(skillRoutes,         { prefix: '/api/skills' })
   await app.register(serviceRoutes,       { prefix: '/api/services' })

@@ -239,6 +239,33 @@ model SiteSettings {
 }
 
 // ============================================================
+// CLIENTS — Vitrine de clientes / cases
+// ============================================================
+model Client {
+  id           String   @id @default(cuid())
+  name         String
+  subtitle     String?
+  segment      String?
+  description  String   @default("")
+  image        String?
+  // JSON: [{src: string, alt: string}] — galeria, espelha Project.images
+  images       Json     @default("[]")
+  technologies String[]
+  // JSON: [{value: string, label: string}] — métricas opcionais (ex: "Multi-tenant" / "Arquitetura")
+  metrics      Json     @default("[]")
+  linkDemo     String?
+  linkGithub   String?
+  featured     Boolean  @default(false)
+  order        Int      @default(0)
+  active       Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("clients")
+}
+
+// ============================================================
 // LEADS — Módulo comercial
 // ============================================================
 model Lead {
