@@ -256,6 +256,8 @@ model Client {
   linkDemo     String?
   linkGithub   String?
   featured     Boolean  @default(false)
+  // em_producao | em_andamento | em_autorizacao
+  status       String   @default("em_producao")
   order        Int      @default(0)
   active       Boolean  @default(true)
 
