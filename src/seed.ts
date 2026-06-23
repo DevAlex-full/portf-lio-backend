@@ -484,22 +484,46 @@ async function main() {
     console.log(`⏭  Extras já existem (${extrasCount})`)
   }
 
-  // ── Clients (vitrine pública) ─────────────────────────────
-  const clientsCount = await prisma.client.count()
-  if (clientsCount === 0) {
-    const clientsData = [
-      {
+  // ── Clients (vitrine pública) — idempotente por nome ─────────
+  // Upsert: cria se não existe, atualiza se já existe.
+  // Isso garante que BarberFlow sempre esteja no banco, mesmo que
+  // outros clientes já tenham sido inseridos manualmente antes.
+  const barberImages = [
+    { src: '/imagens/barberflow1.png', alt: 'BarberFlow - Dashboard' },
+    { src: '/imagens/barberflow2.png', alt: 'BarberFlow - Gestão'    },
+    { src: '/imagens/barberflow3.png', alt: 'BarberFlow - Mobile'    },
+  ] as unknown as import('@prisma/client').Prisma.InputJsonValue
+
+  const barberflow = await prisma.client.findFirst({ where: { name: 'BarberFlow' } })
+  if (barberflow) {
+    await prisma.client.update({
+      where: { id: barberflow.id },
+      data: {
+        subtitle:     'SaaS Multi-tenant para Barbearias',
+        segment:      'Barbearias e Salões',
+        description:  'Plataforma completa para gestão de barbearias, com agendamento online, gestão financeira, controle de estoque, comissões por barbeiro e app mobile.',
+        image:        '/imagens/barberflow1.png',
+        images:       barberImages,
+        technologies: ['Next.js', 'TypeScript', 'Node.js', 'PostgreSQL', 'Prisma ORM', 'Supabase', 'React Native'],
+        metrics:      [] as unknown as import('@prisma/client').Prisma.InputJsonValue,
+        linkDemo:     'https://barberflowoficial.vercel.app/',
+        featured:     true,
+        status:       'em_producao',
+        order:        1,
+        active:       true,
+      },
+    })
+    console.log('⏭  BarberFlow (client) já existe — atualizado')
+  } else {
+    await prisma.client.create({
+      data: {
         name:         'BarberFlow',
         subtitle:     'SaaS Multi-tenant para Barbearias',
         segment:      'Barbearias e Salões',
-        description:  'Plataforma SaaS completa para gestão de barbearias. Agendamento online, controle de caixa, gestão de funcionários e muito mais — tudo em um sistema multi-tenant escalável.',
+        description:  'Plataforma completa para gestão de barbearias, com agendamento online, gestão financeira, controle de estoque, comissões por barbeiro e app mobile.',
         image:        '/imagens/barberflow1.png',
-        images:       [
-          { src: '/imagens/barberflow1.png', alt: 'BarberFlow - Dashboard'  },
-          { src: '/imagens/barberflow2.png', alt: 'BarberFlow - Gestão'     },
-          { src: '/imagens/barberflow3.png', alt: 'BarberFlow - Mobile'     },
-        ] as unknown as import('@prisma/client').Prisma.InputJsonValue,
-        technologies: ['Next.js', 'Node.js', 'PostgreSQL', 'React Native', 'Prisma ORM', 'Supabase'],
+        images:       barberImages,
+        technologies: ['Next.js', 'TypeScript', 'Node.js', 'PostgreSQL', 'Prisma ORM', 'Supabase', 'React Native'],
         metrics:      [] as unknown as import('@prisma/client').Prisma.InputJsonValue,
         linkDemo:     'https://barberflowoficial.vercel.app/',
         linkGithub:   null,
@@ -508,31 +532,8 @@ async function main() {
         order:        1,
         active:       true,
       },
-      {
-        name:         'Débora Santiago',
-        subtitle:     'Fisioterapeuta Pós-Cirúrgica',
-        segment:      'Saúde & Bem-Estar',
-        description:  'Sistema web completo para gestão de pacientes pós-cirúrgicos, controle de poltronas de recuperação e agendamento de sessões de fisioterapia.',
-        image:        null,
-        images:       [] as unknown as import('@prisma/client').Prisma.InputJsonValue,
-        technologies: ['Next.js', 'Node.js', 'Fastify', 'PostgreSQL', 'Prisma ORM', 'Supabase', 'Asaas'],
-        metrics:      [] as unknown as import('@prisma/client').Prisma.InputJsonValue,
-        linkDemo:     null,
-        linkGithub:   null,
-        featured:     true,
-        status:       'em_producao',
-        order:        2,
-        active:       true,
-      },
-    ]
-
-    for (const c of clientsData) {
-      await prisma.client.create({ data: c })
-    }
-
-    console.log(`✅ ${clientsData.length} clientes criados`)
-  } else {
-    console.log(`⏭  Clientes já existem (${clientsCount})`)
+    })
+    console.log('✅ BarberFlow (client) criado')
   }
 
   // ── Resumo ───────────────────────────────────────────────────
