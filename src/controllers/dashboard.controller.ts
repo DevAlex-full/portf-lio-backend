@@ -1,6 +1,16 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import { prisma } from '../lib/prisma'
 
+// Conta imagens em campos JSON do tipo [{src,alt}][]
+// Retorna o número de objetos dentro dos arrays JSON de um conjunto de registros.
+function countJsonImages(rows: { images: unknown }[]): number {
+  let total = 0
+  for (const row of rows) {
+    if (Array.isArray(row.images)) total += row.images.length
+  }
+  return total
+}
+
 // ============================================================
 // GET /api/dashboard/stats — Admin
 // ============================================================
@@ -13,9 +23,13 @@ export async function getDashboardStats(_req: FastifyRequest, reply: FastifyRepl
     totalServices,
     totalClients,
     featuredClients,
-    totalMedia,
+    totalFeedbacks,
     totalLeads,
     newLeads,
+    // Para o contador melhorado de mídias
+    totalMediaTable,
+    projectsWithImages,
+    clientsWithImages,
     recentProjects,
     recentLeads,
     recentMedia,
@@ -27,9 +41,19 @@ export async function getDashboardStats(_req: FastifyRequest, reply: FastifyRepl
     prisma.servicePlan.count({ where: { active: true } }),
     prisma.client.count({ where: { active: true } }),
     prisma.client.count({ where: { featured: true, active: true } }),
-    prisma.media.count(),
+    prisma.feedback.count({ where: { active: true } }),
     prisma.lead.count({ where: { archived: false } }),
     prisma.lead.count({ where: { status: 'novo', archived: false } }),
+    // Registros na tabela media (uploads reais)
+    prisma.media.count(),
+    // Projetos: image (capa) + cada item em images[]
+    prisma.project.findMany({
+      select: { image: true, images: true },
+    }),
+    // Clientes: image (capa) + cada item em images[]
+    prisma.client.findMany({
+      select: { image: true, images: true },
+    }),
     prisma.project.findMany({
       where:   { active: true },
       orderBy: { updatedAt: 'desc' },
@@ -49,6 +73,21 @@ export async function getDashboardStats(_req: FastifyRequest, reply: FastifyRepl
     }),
   ])
 
+  // Contador de imagens de projetos:
+  // - 1 por project.image não nulo
+  // - + quantidade de itens em project.images[]
+  const projectImageCount =
+    projectsWithImages.filter((p: { image: string | null }) => p.image).length +
+    countJsonImages(projectsWithImages as { images: unknown }[])
+
+  // Contador de imagens de clientes:
+  const clientImageCount =
+    clientsWithImages.filter((c: { image: string | null }) => c.image).length +
+    countJsonImages(clientsWithImages as { images: unknown }[])
+
+  // Total consolidado de imagens em uso no portfólio
+  const totalMedia = totalMediaTable + projectImageCount + clientImageCount
+
   return reply.send({
     totals: {
       projects:        totalProjects,
@@ -58,6 +97,7 @@ export async function getDashboardStats(_req: FastifyRequest, reply: FastifyRepl
       services:        totalServices,
       clients:         totalClients,
       featuredClients,
+      feedbacks:       totalFeedbacks,
       media:           totalMedia,
       leads:           totalLeads,
       newLeads,

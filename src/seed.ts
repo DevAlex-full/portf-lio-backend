@@ -536,6 +536,57 @@ async function main() {
     console.log('✅ BarberFlow (client) criado')
   }
 
+  // ── Feedbacks — idempotente ───────────────────────────────
+  const DEBORA_FEEDBACK = `Existem profissionais competentes, e existem profissionais que transformam cada detalhe em excelência. O Alexbueno.dev faz parte desse segundo grupo.
+
+Quero deixar registrado meu profundo agradecimento e admiração pelo trabalho impecável na criação do meu site. O resultado superou todas as minhas expectativas!
+
+Seu capricho é algo raro de encontrar. Cada detalhe foi pensado com extremo cuidado, bom gosto e profissionalismo. Além da competência técnica, o que mais me marcou foi sua dedicação, paciência, disponibilidade e o carinho que coloca em cada etapa do trabalho.
+
+Não é apenas um desenvolvedor de sites; é um profissional que realmente se preocupa em entregar algo único, personalizado e de altíssimo nível.
+
+Parabéns pelo talento, pela excelência e pelo compromisso com a qualidade. Foi um privilégio contar com o seu trabalho. Recomendo de olhos fechados a qualquer pessoa que procure um profissional sério, criativo e apaixonado pelo que faz.
+
+Muito obrigada por transformar minha ideia em um site maravilhoso!
+
+Show! 👏👏👏👏`
+
+  const deboraFeedback = await prisma.feedback.findFirst({
+    where: { clientName: 'Débora Santiago' },
+  })
+
+  if (deboraFeedback) {
+    await prisma.feedback.update({
+      where: { id: deboraFeedback.id },
+      data: {
+        clientRole:  'Fisioterapeuta',
+        company:     'Saúde & Clínicas',
+        projectName: 'Débora Santiago Fisioterapia',
+        content:     DEBORA_FEEDBACK,
+        rating:      5,
+        featured:    true,
+        active:      true,
+        order:       1,
+      },
+    })
+    console.log('⏭  Feedback Débora Santiago já existe — atualizado')
+  } else {
+    await prisma.feedback.create({
+      data: {
+        clientName:  'Débora Santiago',
+        clientRole:  'Fisioterapeuta',
+        company:     'Saúde & Clínicas',
+        projectName: 'Débora Santiago Fisioterapia',
+        content:     DEBORA_FEEDBACK,
+        rating:      5,
+        featured:    true,
+        active:      true,
+        order:       1,
+      },
+    })
+    console.log('✅ Feedback Débora Santiago criado')
+  }
+
   // ── Resumo ───────────────────────────────────────────────────
   console.log('\n🎉 Seed concluído com sucesso!')
   console.log('─'.repeat(40))
